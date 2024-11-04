@@ -41,11 +41,10 @@ jobs:
 
       - name: Push to osopags-plugin-unity
         env:
-          REPO_URL: https://github.com/k00mu/osopags-plugin-unity.git
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Clone the target repository
-          git clone $REPO_URL plugin-repo
+          # Clone the target repository using the GITHUB_TOKEN
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/k00mu/osopags-plugin-unity.git plugin-repo
           cd plugin-repo
 
           # Copy the relevant files
