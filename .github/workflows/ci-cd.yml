@@ -13,10 +13,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Install Git Cliff
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git-cliff
+      run: cargo install git-cliff
 
     - name: Bump version and update CHANGELOG
       run: |
@@ -47,8 +51,9 @@ jobs:
         rsync -av --delete ../Assets/Osopags/ ./Assets/Osopags/
 
         # Commit and push changes with version in the commit message
+        VERSION=$(git-cliff --bumped-version)
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add .
-        git commit -m "Update to version $VERSION"
+        git commit -m "chore: update Osopags plugin to version $VERSION"
         git push origin main
