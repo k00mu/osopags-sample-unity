@@ -10,51 +10,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Install Git Cliff
-      run: cargo install git-cliff
+      - name: Install Git Cliff
+        run: cargo install git-cliff
 
-    - name: Bump version and update CHANGELOG
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git-cliff --bumped-version
-        git-cliff --bump > CHANGELOG.md
-        git add CHANGELOG.md
-        git commit -m "chore: update CHANGELOG.md"
-        git pull --rebase origin main
-        git push origin main
+      - name: Bump version and update CHANGELOG
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git-cliff --bumped-version
+          git-cliff --bump > CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md"
+          git pull --rebase origin main
+          git push origin main
 
-    - name: Create a new tag
-      run: |
-        VERSION=$(git-cliff --bumped-version)
-        git tag $VERSION
-        git push origin $VERSION
+      - name: Create a new tag
+        run: |
+          VERSION=$(git-cliff --bumped-version)
+          git tag $VERSION
+          git push origin $VERSION
 
-    - name: Push to osopags-plugin-unity
-      env:
-        REPO_URL: https://github.com/k00mu/osopags-plugin-unity.git
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        # Clone the target repository
-        git clone $REPO_URL plugin-repo
-        cd plugin-repo
+      - name: Push to osopags-plugin-unity
+        env:
+          REPO_URL: https://github.com/k00mu/osopags-plugin-unity.git
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Clone the target repository
+          git clone $REPO_URL plugin-repo
+          cd plugin-repo
 
-        # Copy the relevant files
-        rsync -av --delete ../Assets/Osopags/ ./Assets/Osopags/
+          # Copy the relevant files
+          rsync -av --delete ../Assets/Osopags/ .
 
-        # Commit and push changes with version in the commit message
-        VERSION=$(git-cliff --bumped-version)
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add .
-        git commit -m "chore: update Osopags plugin to version $VERSION"
-        git push origin main
+          # Commit and push changes with version in the commit message
+          VERSION=$(git-cliff --bumped-version)
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "chore: update Osopags plugin to version $VERSION"
+          git push origin main
