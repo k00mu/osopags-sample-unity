@@ -49,7 +49,7 @@ jobs:
           cd plugin-repo
 
           # Copy the relevant files
-          rsync -av --delete ../Assets/Osopags/ .
+          rsync -av --delete --exclude '.git' ../Assets/Osopags/ .
 
           # Commit and push changes with version in the commit message
           VERSION=$(git-cliff --bumped-version)
