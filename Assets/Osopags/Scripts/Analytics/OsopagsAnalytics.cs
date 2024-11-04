@@ -11,7 +11,7 @@ namespace Osopags
             var url = $"{OsopagsConfig.BackendUrl}/events";
             var content = new StringContent($"{{\"eventName\":\"{eventName}\",\"eventData\":{eventData}}}", System.Text.Encoding.UTF8, "application/json");
 
-            var response = await OsopagsHttpClient.PostAsync(url, content);
+            var response = await HttpHelper.PostAsync(url, content);
             if (response.IsSuccessStatusCode)
             {
                 Debug.Log("Event sent successfully.");
