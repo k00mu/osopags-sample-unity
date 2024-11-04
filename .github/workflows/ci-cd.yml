@@ -13,37 +13,52 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
         with:
-          toolchain: stable
-          override: true
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
 
       - name: Install Git Cliff
         run: cargo install git-cliff
 
-      - name: Bump version and update CHANGELOG
+      - name: Check bump version
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git-cliff --bumped-version
-          git-cliff --bump > CHANGELOG.md
-          git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG.md"
-          git pull --rebase origin main
-          git push origin main
-
-      - name: Create a new tag
-        run: |
-          VERSION=$(git-cliff --bumped-version)
-          git tag $VERSION
-          git push origin $VERSION
+          NEW_VERSION_TAG=$(git-cliff --bumped-version)
+          jq --arg version "$NEW_VERSION_TAG" '.version = $version' Assets/Osopags/package.json > tmp.$$.json && mv tmp.$$.json Assets/Osopags/package.json
+          if [ -n "$(git diff --name-only HEAD -- ./Assets/Osopags/package.json)" ]; then
+            echo "Bumping version";
+            git-cliff --bump > CHANGELOG.md
+            git add CHANGELOG.md Assets/Osopags/package.json
+            git commit -m "chore: bump version to v$NEW_VERSION_TAG [skip ci]";
+            git pull --rebase origin main
+            git push https://$PAT_TOKEN@github.com/k00mu/osopags-sample-unity.git main
+            git tag $NEW_VERSION_TAG
+            git push https://$PAT_TOKEN@github.com/k00mu/osopags-sample-unity.git $NEW_VERSION_TAG
+          else
+            echo "No version bump required";
+          fi
 
       - name: Push to osopags-plugin-unity
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # Clone the target repository using the PAT
+          VERSION=$(git-cliff --bumped-version)
+          LATEST_COMMIT_HASH=$(git rev-parse --short HEAD)
           git clone https://$PAT_TOKEN@github.com/k00mu/osopags-plugin-unity.git plugin-repo
           cd plugin-repo
 
@@ -51,9 +66,12 @@ jobs:
           rsync -av --delete --exclude '.git' ../Assets/Osopags/ .
 
           # Commit and push changes with version in the commit message
-          VERSION=$(git-cliff --bumped-version)
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add .
-          git commit -m "chore: update Osopags plugin to version $VERSION"
-          git push origin main
+          git commit -m "update from https://github.com/k00mu/osopags-sample-unity/commit/$LATEST_COMMIT_HASH"
+          git push https://$PAT_TOKEN@github.com/k00mu/osopags-plugin-unity.git main
+          if [ -n "$(git diff --name-only HEAD -- ../Assets/Osopags/package.json)" ]; then
+            git tag $VERSION
+            git push https://$PAT_TOKEN@github.com/k00mu/osopags-plugin-unity.git $VERSION
+          fi
