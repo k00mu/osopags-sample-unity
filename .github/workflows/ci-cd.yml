@@ -30,6 +30,7 @@ jobs:
         git-cliff --bump > CHANGELOG.md
         git add CHANGELOG.md
         git commit -m "chore: update CHANGELOG.md"
+        git pull --rebase origin main
         git push origin main
 
     - name: Create a new tag
