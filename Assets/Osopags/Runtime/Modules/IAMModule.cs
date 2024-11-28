@@ -1,20 +1,36 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
-using Osopags.Models;
 using Osopags.Core;
+using Osopags.Models;
 
 namespace Osopags.Modules
 {
     public class IAMModule
     {
-        private readonly HttpClient httpClient;
         private readonly string deviceId;
 
-        public IAMModule(HttpClient httpClient)
+        public IAMModule()
         {
-            this.httpClient = httpClient;
-            this.deviceId = GetOrCreateDeviceId();
+            deviceId = GetOrCreateDeviceId();
+        }
+
+
+        public void TestConnection(
+            OsopagsConfig config,
+            SuccessDelegate<bool> onSuccess,
+            ErrorDelegate<ErrorResponse> onError
+        )
+        {
+            _ = TestConnectionInternal(config, onSuccess, onError);
+        }
+
+        public void AuthDevice(
+            SuccessDelegate<AuthDeviceResponse> onSuccess,
+            ErrorDelegate<ErrorResponse> onError
+        )
+        {
+            _ = AuthDeviceInternal(onSuccess, onError);
         }
 
         private string GetOrCreateDeviceId()
@@ -32,88 +48,57 @@ namespace Osopags.Modules
             return deviceId;
         }
 
-        public async Task<bool> TestConnection(OsopagsConfig config)
+        // TODO: lets make separate endpoint for this
+        private async Task TestConnectionInternal(
+            OsopagsConfig config,
+            SuccessDelegate<bool> onSuccess,
+            ErrorDelegate<ErrorResponse> onError
+        )
         {
             try
             {
-                var response = await httpClient.Get<SuccessResponse<GetGameClientResponse>>(config, $"/v1/iam/clients/{config.ClientId}", false);
-                Debug.Log($"Connection test response: {response.data.gameName}");
-                return response != null && !string.IsNullOrEmpty(response.data.id);
+                var response = await OsopagsHttpClient
+                    .Get<SuccessResponse<GetGameClientResponse>>(
+                        config,
+                        $"/v1/iam/clients/{config.ClientId}",
+                        false
+                    );
+
+                onSuccess?.Invoke(response != null && !string.IsNullOrEmpty(response.data.id));
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"Connection test failed: {e.Message}");
-                return false;
+                onError?.Invoke(new ErrorResponse { message = ex.Message });
             }
         }
 
-        public async Task<AuthResponse> AuthenticateDevice()
+        private async Task AuthDeviceInternal(
+            SuccessDelegate<AuthDeviceResponse> onSuccess,
+            ErrorDelegate<ErrorResponse> onError
+        )
         {
-            var request = new
-            {
-                device_id = deviceId,
-                client_id = OsopagsSDK.Instance.Config.ClientId,
-            };
-
             try
             {
-                var response = await httpClient.Post<AuthResponse>("/v1/iam/device/auth", request, false);
-                if (response.Token != null)
+                var request = new AuthDeviceRequest
                 {
-                    OsopagsSDK.Instance.SetToken(response.Token);
-                }
-                return response;
-            }
-            catch (Exception e)
-            {
-                return new AuthResponse { Error = e.Message };
-            }
-        }
+                    machine_id = deviceId,
+                    client_id = OsopagsSettings.Instance.GetCurrentConfig().ClientId
+                };
 
-        public async Task<AuthResponse> Register(string username, string email, string password)
-        {
-            var request = new
-            {
-                username,
-                email,
-                password
-            };
+                var response = await OsopagsHttpClient
+                .Post<SuccessResponse<AuthDeviceResponse>>(
+                        "/v1/iam/auth/device",
+                        request,
+                        false
+                    );
 
-            try
-            {
-                var response = await httpClient.Post<AuthResponse>("/v1/iam/register", request, false);
-                if (response.Token != null)
-                {
-                    OsopagsSDK.Instance.SetToken(response.Token);
-                }
-                return response;
-            }
-            catch (Exception e)
-            {
-                return new AuthResponse { Error = e.Message };
-            }
-        }
+                OsopagsSDK.Instance.Token = response.data.deviceToken;
 
-        public async Task<AuthResponse> Login(string username, string password)
-        {
-            var request = new
-            {
-                username,
-                password
-            };
-
-            try
-            {
-                var response = await httpClient.Post<AuthResponse>("/v1/iam/login", request, false);
-                if (response.Token != null)
-                {
-                    OsopagsSDK.Instance.SetToken(response.Token);
-                }
-                return response;
+                onSuccess?.Invoke(response.data);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return new AuthResponse { Error = e.Message };
+                onError?.Invoke(new ErrorResponse { message = ex.Message });
             }
         }
     }

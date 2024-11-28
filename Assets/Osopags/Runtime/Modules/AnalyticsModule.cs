@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
 using Osopags.Models;
 using Osopags.Core;
 
@@ -9,63 +8,41 @@ namespace Osopags.Modules
 {
     public class AnalyticsModule
     {
-        private readonly HttpClient httpClient;
-        private readonly Queue<GameEvent> eventQueue;
-        private readonly int maxQueueSize = 100;
-        private bool isSending = false;
+        private readonly Queue<GameEvent> offlineEventQueue;
 
-        public AnalyticsModule(HttpClient httpClient)
+        public AnalyticsModule()
         {
-            this.httpClient = httpClient;
-            this.eventQueue = new Queue<GameEvent>();
+            offlineEventQueue = new Queue<GameEvent>();
         }
 
-        public void TrackEvent(string eventType, Dictionary<string, object> eventData)
+        public async Task<bool> TrackEvent(string eventType, Dictionary<string, object> eventData)
         {
-            var gameEvent = new GameEvent
+            if (OsopagsHttpClient.IsOnline())
             {
-                EventType = eventType,
-                EventData = eventData,
-                Timestamp = DateTime.UtcNow
-            };
-
-            eventQueue.Enqueue(gameEvent);
-
-            if (eventQueue.Count >= maxQueueSize)
-            {
-                _ = SendEvents();
-            }
-        }
-
-        private async Task SendEvents()
-        {
-            if (isSending || eventQueue.Count == 0)
-                return;
-
-            isSending = true;
-
-            try
-            {
-                var events = new List<GameEvent>();
-                while (eventQueue.Count > 0 && events.Count < maxQueueSize)
+                var eventRequest = new EventRequest
                 {
-                    events.Add(eventQueue.Dequeue());
-                }
+                    eventType = eventType,
+                    eventData = eventData
+                };
 
-                await httpClient.Post<object>("/v1/analytics/events", new { events });
+                var response = await OsopagsHttpClient.Post<SuccessResponse<TelemetryEventResponse>>(
+                    "/v1/analytics/events",
+                    eventRequest,
+                    true
+                );
+
+                return response.data.id != null;
             }
-            catch (Exception e)
+            else
             {
-                Debug.LogError($"Failed to send analytics events: {e.Message}");
-                // Re-queue failed events
-                foreach (var evt in eventQueue)
+                offlineEventQueue.Enqueue(new GameEvent
                 {
-                    eventQueue.Enqueue(evt);
-                }
-            }
-            finally
-            {
-                isSending = false;
+                    EventType = eventType,
+                    EventData = eventData,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                return false;
             }
         }
     }

@@ -42,7 +42,7 @@ namespace Osopags.Models
     [Serializable]
     public class AuthDeviceRequest
     {
-        public string device_id;
+        public string machine_id;
         public string client_id;
     }
 

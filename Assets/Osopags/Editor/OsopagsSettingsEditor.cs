@@ -3,6 +3,7 @@ using UnityEditor;
 using Osopags.Models;
 using Osopags.Core;
 using System.Threading.Tasks;
+using System;
 
 namespace Osopags.Editor
 {
@@ -104,19 +105,19 @@ namespace Osopags.Editor
 
             EditorGUI.indentLevel--;
 
-            // Add Test Connection button
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(isTestingConnection);
-            if (GUILayout.Button("Test Connection"))
+            // Test Connection button
+            using (new EditorGUI.DisabledGroupScope(isTestingConnection))
             {
-                TestConnection(config);
+                if (GUILayout.Button("Test Connection"))
+                {
+                    TestConnectionHandler(config);
+                }
             }
-            EditorGUI.EndDisabledGroup();
+
             if (isTestingConnection)
             {
                 EditorGUILayout.LabelField("Testing connection...", EditorStyles.miniLabel);
             }
-            EditorGUILayout.EndHorizontal();
 
             // Show warning if this is the current environment and validation fails
             if (label == settings.CurrentEnvironment && !ValidateConfig(config))
@@ -127,60 +128,31 @@ namespace Osopags.Editor
             EditorGUILayout.EndVertical();
         }
 
-        private async void TestConnection(OsopagsConfig config)
+        private void TestConnectionHandler(OsopagsConfig config)
         {
             if (!ValidateConfig(config))
             {
-                EditorUtility.DisplayDialog("Test Connection",
-                    "Please fill in all required fields before testing the connection.", "OK");
+                EditorUtility.DisplayDialog("Test Connection", "Please fill in all required fields.", "OK");
                 return;
             }
 
             isTestingConnection = true;
             Repaint();
 
-            try
-            {
-                bool isConnected = await TestConnectionAsync(config);
-
-                if (isConnected)
+            OsopagsSDK.Instance.IAM.TestConnection(config,
+                result =>
                 {
-                    EditorUtility.DisplayDialog("Test Connection",
-                        "Connection successful! The backend service is responding correctly.", "OK");
-                }
-                else
+                    isTestingConnection = false;
+                    EditorUtility.DisplayDialog("Test Connection", "Connection successful!", "OK");
+                    Repaint();
+                },
+                error =>
                 {
-                    EditorUtility.DisplayDialog("Test Connection",
-                        "Connection failed. Please check your configuration and ensure the backend service is running.", "OK");
+                    isTestingConnection = false;
+                    EditorUtility.DisplayDialog("Test Connection", $"Connection failed: {error.message}", "OK");
+                    Repaint();
                 }
-            }
-            catch (System.Exception ex)
-            {
-                EditorUtility.DisplayDialog("Test Connection Error",
-                    $"An error occurred while testing the connection:\n\n{ex.Message}", "OK");
-            }
-            finally
-            {
-                isTestingConnection = false;
-                Repaint();
-            }
-        }
-
-        private async Task<bool> TestConnectionAsync(OsopagsConfig config)
-        {
-            // Create a timeout task
-            var timeoutTask = Task.Delay(5000); // 5 seconds timeout
-            var connectionTask = OsopagsSDK.Instance.IAM.TestConnection(config);
-
-            // Wait for either the connection test or timeout
-            var completedTask = await Task.WhenAny(connectionTask, timeoutTask);
-
-            if (completedTask == timeoutTask)
-            {
-                throw new System.TimeoutException("Connection test timed out after 5 seconds");
-            }
-
-            return await connectionTask;
+            );
         }
 
         private bool ValidateConfig(OsopagsConfig config)
@@ -245,7 +217,7 @@ namespace Osopags.Editor
                     $"{settings.CurrentEnvironment} settings are valid. Would you like to test the connection to the current environment?",
                     "Test Connection", "Close"))
                 {
-                    TestConnection(settings.GetCurrentConfig());
+                    TestConnectionHandler(settings.GetCurrentConfig());
                 }
             }
             else
