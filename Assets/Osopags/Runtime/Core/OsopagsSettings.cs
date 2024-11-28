@@ -57,8 +57,6 @@ namespace Osopags.Core
             {
                 case "development":
                     return config.Development;
-                case "staging":
-                    return config.Staging;
                 case "production":
                     return config.Production;
                 default:
@@ -108,7 +106,6 @@ namespace Osopags.Core
                 config = new EnvironmentConfig
                 {
                     Development = new OsopagsConfig(),
-                    Staging = new OsopagsConfig(),
                     Production = new OsopagsConfig()
                 };
             }
@@ -116,14 +113,11 @@ namespace Osopags.Core
             // Ensure all environment configs exist
             if (config.Development == null)
                 config.Development = new OsopagsConfig();
-            if (config.Staging == null)
-                config.Staging = new OsopagsConfig();
             if (config.Production == null)
                 config.Production = new OsopagsConfig();
 
             // Validate URLs format
             ValidateUrl(config.Development.BaseUrl);
-            ValidateUrl(config.Staging.BaseUrl);
             ValidateUrl(config.Production.BaseUrl);
         }
 
@@ -150,11 +144,6 @@ namespace Osopags.Core
                 Development = new OsopagsConfig
                 {
                     BaseUrl = "http://localhost:3000",
-                    EnableDebugLog = true
-                },
-                Staging = new OsopagsConfig
-                {
-                    BaseUrl = "https://staging-api.yourgame.com",
                     EnableDebugLog = true
                 },
                 Production = new OsopagsConfig

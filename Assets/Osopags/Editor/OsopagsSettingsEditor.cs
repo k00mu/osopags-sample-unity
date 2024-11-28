@@ -11,7 +11,7 @@ namespace Osopags.Editor
     {
         private OsopagsSettings settings;
         private Vector2 scrollPosition;
-        private readonly string[] environments = { "Development", "Staging", "Production" };
+        private readonly string[] environments = { "Development", "Production" };
 
         private bool isTestingConnection = false;
 
@@ -69,8 +69,6 @@ namespace Osopags.Editor
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
             DrawEnvironmentSettings("Development", settings.Config.Development);
-            EditorGUILayout.Space(20);
-            DrawEnvironmentSettings("Staging", settings.Config.Staging);
             EditorGUILayout.Space(20);
             DrawEnvironmentSettings("Production", settings.Config.Production);
 
@@ -202,9 +200,6 @@ namespace Osopags.Editor
             {
                 case "Development":
                     ValidateEnvironment("Development", settings.Config.Development);
-                    break;
-                case "Staging":
-                    ValidateEnvironment("Staging", settings.Config.Staging);
                     break;
                 case "Production":
                     ValidateEnvironment("Production", settings.Config.Production);

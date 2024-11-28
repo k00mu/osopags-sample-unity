@@ -16,7 +16,6 @@ namespace Osopags.Models
     public class EnvironmentConfig
     {
         public OsopagsConfig Development;
-        public OsopagsConfig Staging;
         public OsopagsConfig Production;
     }
 }
