@@ -56,14 +56,20 @@ namespace Osopags.Models
     }
 
     [Serializable]
-    public class EventRequest
+    public class TrackRequest
+    {
+        public string eventType;
+    }
+
+    [Serializable]
+    public class TrackWithDataRequest
     {
         public string eventType;
         public Dictionary<string, object> eventData;
     }
 
     [Serializable]
-    public class TelemetryEvent
+    public class TrackEventModel
     {
         public string id;
         public string user_id;
@@ -146,11 +152,20 @@ namespace Osopags.Models
     }
 
     [Serializable]
-    public class TelemetryEventResponse
+    public class TrackResponse
     {
         public string id;
         public string gameClientId;
-        public string userId;
+        public string deviceId;
+        public string eventType;
+        public DateTime timestamp;
+    }
+
+    [Serializable]
+    public class TrackWithDataResponse
+    {
+        public string id;
+        public string gameClientId;
         public string deviceId;
         public string eventType;
         public Dictionary<string, object> eventData;
@@ -158,7 +173,7 @@ namespace Osopags.Models
     }
 
     [Serializable]
-    public class TelemetryEventStats
+    public class TrackEventStats
     {
         public string eventType;
         public int count;

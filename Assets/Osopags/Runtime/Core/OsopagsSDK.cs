@@ -20,7 +20,7 @@ namespace Osopags.Core
         }
 
         private IAMModule iamModule;
-        private AnalyticsModule analyticsModule;
+        private AnalyticModule analyticModule;
         private string currentToken;
         public string Token
         {
@@ -36,7 +36,7 @@ namespace Osopags.Core
         }
 
         public IAMModule IAM => iamModule;
-        public AnalyticsModule Analytics => analyticsModule;
+        public AnalyticModule Analytic => analyticModule;
 
         private OsopagsSDK()
         {
@@ -46,7 +46,7 @@ namespace Osopags.Core
         private void InitializeServices()
         {
             iamModule = new IAMModule();
-            analyticsModule = new AnalyticsModule();
+            analyticModule = new AnalyticModule();
         }
     }
 }

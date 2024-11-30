@@ -18,16 +18,16 @@ namespace Osopags.Modules
 
         public void TestConnection(
             OsopagsConfig config,
-            SuccessDelegate<bool> onSuccess,
-            ErrorDelegate<ErrorResponse> onError
+            SuccessDelegate<bool> onSuccess = null,
+            ErrorDelegate<ErrorResponse> onError = null
         )
         {
             _ = TestConnectionInternal(config, onSuccess, onError);
         }
 
         public void AuthDevice(
-            SuccessDelegate<AuthDeviceResponse> onSuccess,
-            ErrorDelegate<ErrorResponse> onError
+            SuccessDelegate<AuthDeviceResponse> onSuccess = null,
+            ErrorDelegate<ErrorResponse> onError = null
         )
         {
             _ = AuthDeviceInternal(onSuccess, onError);
@@ -51,8 +51,8 @@ namespace Osopags.Modules
         // TODO: lets make separate endpoint for this
         private async Task TestConnectionInternal(
             OsopagsConfig config,
-            SuccessDelegate<bool> onSuccess,
-            ErrorDelegate<ErrorResponse> onError
+            SuccessDelegate<bool> onSuccess = null,
+            ErrorDelegate<ErrorResponse> onError = null
         )
         {
             try
@@ -73,8 +73,8 @@ namespace Osopags.Modules
         }
 
         private async Task AuthDeviceInternal(
-            SuccessDelegate<AuthDeviceResponse> onSuccess,
-            ErrorDelegate<ErrorResponse> onError
+            SuccessDelegate<AuthDeviceResponse> onSuccess = null,
+            ErrorDelegate<ErrorResponse> onError = null
         )
         {
             try

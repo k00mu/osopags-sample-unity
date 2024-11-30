@@ -15,7 +15,7 @@ MonoBehaviour:
   config:
     Development:
       BaseUrl: http://localhost
-      ClientId: efad073f-1856-4c53-bff5-aedfea622b39
+      ClientId: 1e9615a7-fdab-487a-854d-ea785bf1b2d5
       GameNamespace: test-game
       EnableDebugLog: 1
     Production:
