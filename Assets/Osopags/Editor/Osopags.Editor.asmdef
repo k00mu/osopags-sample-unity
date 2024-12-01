@@ -1,0 +1,13 @@
+{
+    "name": "Osopags.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Osopags.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false
+}

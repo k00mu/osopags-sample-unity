@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d19ff90d1cf82924db9fc5edfe2cd11c, type: 3}
+  m_Name: OsopagsSettings
+  m_EditorClassIdentifier: 
+  config:
+    Development:
+      BaseUrl: http://localhost
+      ClientId: 1e9615a7-fdab-487a-854d-ea785bf1b2d5
+      GameNamespace: test-game
+      EnableDebugLog: 1
+    Production:
+      BaseUrl: 
+      ClientId: 
+      GameNamespace: 
+      EnableDebugLog: 0
+  currentEnvironment: Development

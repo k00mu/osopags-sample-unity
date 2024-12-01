@@ -1,0 +1,100 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  changelog-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump-version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest tag
+        id: get-latest-tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+
+      - name: Bump version
+        id: bump-version
+        run: |
+          # Extract version numbers
+          current_version=${LATEST_TAG#v}
+          IFS='.' read -r major minor patch <<< "$current_version"
+
+          # Increment patch version
+          new_patch=$((patch + 1))
+          new_version="v$major.$minor.$new_patch"
+
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --verbose --tag ${{ env.NEW_VERSION }}
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Update package.json version
+        run: |
+          sed -i "s/\"version\": \".*\"/\"version\": \"${NEW_VERSION#v}\"/" Assets/Osopags/package.json
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add CHANGELOG.md Assets/Osopags/package.json
+          git commit -m "chore: update changelog and bump version to ${{ env.NEW_VERSION }}"
+
+      - name: Push changes
+        run: git push
+
+      - name: Create tag
+        run: |
+          git tag ${{ env.NEW_VERSION }}
+          git push origin ${{ env.NEW_VERSION }}
+
+  sync-unity-sdk:
+    needs: changelog-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: source
+
+      - name: Checkout unity sdk repo
+        uses: actions/checkout@v4
+        with:
+          repository: k00mu/osopags-sdk-unity
+          token: ${{ secrets.PAT_TOKEN }}
+          path: unity-sdk
+
+      - name: Sync Osopags directory
+        run: |
+          rsync -av source/Assets/Osopags/ unity-sdk/
+          rsync -av source/CHANGELOG.md unity-sdk/CHANGELOG.md
+
+      - name: Commit and push changes
+        working-directory: unity-sdk
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "chore: sync with https://github.com/k00mu/osopags-sample-unity version ${{ needs.changelog-and-release.outputs.version }}"
+          git tag ${{ needs.changelog-and-release.outputs.version }}
+          git push
+          git push --tags
