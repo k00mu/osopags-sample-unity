@@ -38,19 +38,23 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          echo 'Creating cliff.toml configuration'
+          cat > cliff.toml << 'EOL'
+          # Paste the entire cliff.toml content here
+          EOL
           NEW_VERSION_TAG=$(git-cliff --bumped-version)
           jq --arg version "$NEW_VERSION_TAG" '.version = $version' Assets/Osopags/package.json > tmp.$$.json && mv tmp.$$.json Assets/Osopags/package.json
           if [ -n "$(git diff --name-only HEAD -- ./Assets/Osopags/package.json)" ]; then
-            echo "Bumping version";
+            echo "Bumping version"
             git-cliff --bump > CHANGELOG.md
-            git add CHANGELOG.md Assets/Osopags/package.json
-            git commit -m "chore: bump version to v$NEW_VERSION_TAG [skip ci]";
+            git add CHANGELOG.md Assets/Osopags/package.json cliff.toml
+            git commit -m "chore: bump version to v$NEW_VERSION_TAG [skip ci]"
             git pull --rebase origin main
             git push https://$PAT_TOKEN@github.com/k00mu/osopags-sample-unity.git main
             git tag $NEW_VERSION_TAG
             git push https://$PAT_TOKEN@github.com/k00mu/osopags-sample-unity.git $NEW_VERSION_TAG
           else
-            echo "No version bump required";
+            echo "No version bump required"
           fi
 
       - name: Push to osopags-plugin-unity
