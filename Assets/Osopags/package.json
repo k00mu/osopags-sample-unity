@@ -2,6 +2,7 @@
   "name": "com.osopags.plugin",
   "displayName": "Osopags",
   "version": "0.0.2",
-  "unity": "2022.3",
-  "author": "k00mu"
+  "unity": "2020.3",
+  "author": "k00mu",
+  "type": "library"
 }
