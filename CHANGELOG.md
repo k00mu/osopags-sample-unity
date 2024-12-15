@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.3] - 2024-12-15
+
+### Miscellaneous Tasks
+
+- Retarget compability to 2020.3
+
 ## [0.0.2] - 2024-12-13
 
 ### Bug Fixes
 
 - Add .meta for CHANGELOG and README
+
+### Miscellaneous Tasks
+
+- Update changelog and bump version to v0.0.2
 
 ## [0.0.1] - 2024-12-01
 
